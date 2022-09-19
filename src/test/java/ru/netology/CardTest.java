@@ -28,4 +28,19 @@ public class CardTest {
         $x("//div[contains(text(), 'Встреча успешно забронирована')]").should(Condition.visible, Duration.ofSeconds(15));
 
     }
+    @Test
+    void incorrectPhoneNumber() {
+        Configuration.holdBrowserOpen = true;
+        open("http://localhost:9999");
+        $("[placeholder=\"Город\"]").setValue("Владивосток");
+        $("[placeholder=\"Дата встречи\"]").doubleClick().sendKeys(Keys.DELETE);
+        $("[placeholder=\"Дата встречи\"]").setValue("23.09.2022");
+        $("[data-test-id=\"name\"] input").setValue("Иванов Иван");
+        $("[data-test-id=\"phone\"] input").setValue("09898гргр6к6в");
+        $x("//span[contains(text(), 'Я соглашаюсь с условиями обработки')]").click();
+        $(".button__content").click();
+        $x("//span[contains(text(), 'Телефон указан неверно')]").hover();
+
+    }
+
 }
