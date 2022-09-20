@@ -6,41 +6,50 @@ import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Keys;
 
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
+import static com.codeborne.selenide.Condition.exactText;
 import static com.codeborne.selenide.Selenide.*;
 import static com.codeborne.selenide.Selenide.$x;
 
-public class CardTest {
 
+public class CardTest {
+    LocalDate today = LocalDate.now();
+    LocalDate newDate = today.plusDays(3);
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    String planningDate = generateDate(3);
+
+    public String generateDate(int days) {
+        return LocalDate.now().plusDays(days).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+    }
     @Test
     void test() {
 
         Configuration.holdBrowserOpen = true;
         open("http://localhost:9999");
         $("[placeholder=\"Город\"]").setValue("Самара");
-        $("[placeholder=\"Дата встречи\"]").doubleClick().sendKeys(Keys.DELETE);
-        $("[placeholder=\"Дата встречи\"]").setValue("22.09.2022");
+        $("[data-test-id=date] input").sendKeys(formatter.format(newDate));
         $("[data-test-id=\"name\"] input").setValue("Иванов Иван");
         $("[data-test-id=\"phone\"] input").setValue("+12345678900");
         $x("//span[contains(text(), 'Я соглашаюсь с условиями обработки')]").click();
         $(".button__content").click();
         $x("//div[text()= 'Успешно!']").should(Condition.visible, Duration.ofSeconds(15));
-        $x("//div[contains(text(), 'Встреча успешно забронирована')]").should(Condition.visible, Duration.ofSeconds(15));
-
+        $(".notification__content")
+                    .shouldHave(Condition.text("Встреча успешно забронирована на " + planningDate), Duration.ofSeconds(15))
+                    .shouldBe(Condition.visible);
     }
     @Test
     void incorrectPhoneNumber() {
         Configuration.holdBrowserOpen = true;
         open("http://localhost:9999");
         $("[placeholder=\"Город\"]").setValue("Владивосток");
-        $("[placeholder=\"Дата встречи\"]").doubleClick().sendKeys(Keys.DELETE);
-        $("[placeholder=\"Дата встречи\"]").setValue("23.09.2022");
+        $("[data-test-id=date] input").sendKeys(formatter.format(newDate));
         $("[data-test-id=\"name\"] input").setValue("Иванов Иван");
         $("[data-test-id=\"phone\"] input").setValue("09898гргр6к6в");
         $x("//span[contains(text(), 'Я соглашаюсь с условиями обработки')]").click();
         $(".button__content").click();
-        $x("//span[contains(text(), 'Телефон указан неверно')]").hover();
-
+        $("[data-test-id=phone] .input__sub").shouldHave(exactText("Телефон указан неверно. Должно быть 11 цифр, например, +79012345678."));
     }
 
 }
